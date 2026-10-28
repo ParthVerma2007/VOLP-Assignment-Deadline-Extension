@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOLP Tracker</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="logo-group">
+            <span class="logo-icon">🎓</span>
+            <div>
+                <div class="app-title">VOLP Assignment Tracker</div>
+                <!-- <div class="app-subtitle">100% Local • Zero Server • Encrypted</div> -->
+            </div>
+        </div>
+        <!-- <div class="header-badges">
+            <span class="badge badge-crypto" title="Encrypted locally using AES-256-GCM + PBKDF2">🔒 AES-256</span>
+            <span id="loginBadge" class="badge badge-status logged-out" title="VOLP Session Status">Logged Out</span>
+        </div> -->
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav">
+        <button id="tabBtnAssignments" class="tab-btn active" data-tab="tabAssignments">
+            <span>📋</span> Assignments
+        </button>
+        <button id="tabBtnSync" class="tab-btn" data-tab="tabSync">
+            <span>🔄</span> Sync & Scrape
+        </button>
+        <button id="tabBtnCreds" class="tab-btn" data-tab="tabCreds">
+            <span>🔑</span> Credentials
+        </button>
+    </nav>
+
+    <!-- TAB 1: Assignments Dashboard -->
+    <main id="tabAssignments" class="tab-content active">
+        <!-- Quick Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-val courses" id="statCourses">-</div>
+                <div class="stat-lbl">Courses</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" id="statTotal">-</div>
+                <div class="stat-lbl">Assignments</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val pending" id="statPending">-</div>
+                <div class="stat-lbl">Pending</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val submitted" id="statSubmitted">-</div>
+                <div class="stat-lbl">Submitted</div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="controls-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search question or course...">
+            <select id="statusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="false">⚠️ Pending Only</option>
+                <option value="true">✅ Submitted Only</option>
+            </select>
+            <select id="courseFilter" class="filter-select">
+                <option value="">All Courses</option>
+            </select>
+        </div>
+
+        <!-- Assignments Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 28%;">Course</th>
+                        <th style="width: 44%;">Assignment Question</th>
+                        <th style="width: 16%;">Due Date</th>
+                        <th style="width: 12%;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="assignmentsTableBody">
+                    <tr>
+                        <td colspan="4" class="empty-state">Loading assignments from local storage...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="btn-row" style="justify-content: space-between; align-items: center;">
+            <span id="lastSyncedText" style="font-size: 10.5px; color: var(--text-muted);">Last synced: Never</span>
+            <button id="exportJsonBtn" class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;">
+                <span>💾</span> Export JSON
+            </button>
+        </div>
+    </main>
+
+    <!-- TAB 2: Sync & Scrape -->
+    <main id="tabSync" class="tab-content">
+        <div class="card">
+            <!-- <h3 style="font-size: 13px; margin-bottom: 8px;">Direct Browser Scraper</h3> -->
+            <!-- <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px;">
+                This scraper runs <strong>directly inside your open VOLP tab</strong> using your browser's active session. It retrieves all courses and subjective assignments and saves them directly to your browser's private local storage.
+            </p> -->
+
+            <div class="btn-row" style="margin-bottom: 10px;">
+                <button id="scrapeActiveTabBtn" class="btn btn-primary" style="flex: 2;">
+                    <span></span> Start Local Scrape
+                </button>
+                <button id="openVolpBtn" class="btn btn-secondary" style="flex: 1;">
+                    <span></span> Open VOLP
+                </button>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div id="progressContainer" class="progress-container">
+                <div id="progressStatusText" style="font-weight: 600;">Starting scrape...</div>
+                <div class="progress-bar-bg">
+                    <div id="progressBarFill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size: 13px; margin-bottom: 8px;">Auto-Fill Login</h3>
+            <!-- <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px;">
+                Fill your encrypted email & password into the VOLP login page with one click.
+            </p> -->
+            <button id="autoFillBtn" class="btn btn-action" style="width: 100%;">
+                <span></span> Auto-Fill & Submit VOLP Login
+            </button>
+        </div>
+
+        <div id="syncToast" class="toast-msg"></div>
+    </main>
+
+    <!-- TAB 3: Secure Credentials -->
+    <main id="tabCreds" class="tab-content">
+        <div class="card">
+            <!-- <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="font-size: 13px;">Encrypted Local Credentials</h3>
+                <span class="badge badge-crypto">Client-Side Only</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.35;">
+                Credentials are encrypted using <strong>AES-256-GCM</strong> with 100,000 PBKDF2 iterations and stored strictly in your browser. They are never sent to any server.
+            </p> -->
+
+            <form id="credForm">
+                <div class="form-group">
+                    <label for="credEmail">VOLP Email</label>
+                    <input type="email" id="credEmail" placeholder="your.name@vit.edu" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="credPassword">VOLP Password</label>
+                    <div class="password-input-wrap">
+                        <input type="password" id="credPassword" placeholder="••••••••••••" required autocomplete="current-password">
+                        <button type="button" id="togglePasswordBtn" class="toggle-eye" title="Toggle visibility">👁️</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="credMasterPin">Master PIN / Passphrase <span style="font-weight: normal; color: #64748b;">(Optional)</span></label>
+                    <input type="password" id="credMasterPin" placeholder="Optional PIN (adds second encryption layer)">
+                </div>
+
+                <div class="btn-row" style="margin-top: 14px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">
+                        <span>🔒</span> Save Encrypted
+                    </button>
+                    <button type="button" id="clearCredsBtn" class="btn btn-danger" style="flex: 1;">
+                        <span>🗑️</span> Clear
+                    </button>
+                </div>
+            </form>
+            <div id="credToast" class="toast-msg"></div>
+        </div>
+
+        <div class="card" style="margin-top: 4px;">
+            <h3 style="font-size: 12px; margin-bottom: 6px; color: var(--danger);">Reset Local Data</h3>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+                Clear all stored assignments, courses, and sync history from this browser.
+            </p>
+            <button id="clearDataBtn" class="btn btn-secondary" style="font-size: 11px; padding: 6px 10px;">
+                Clear Assignments & Courses Cache
+            </button>
+        </div>
+    </main>
+
+    <!-- Dependencies -->
+    <script src="crypto.js"></script>
+    <script src="storage.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

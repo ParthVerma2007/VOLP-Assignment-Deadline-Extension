@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "VOLP Assignment Tracker (Local)",
+  "version": "2.0.0",
+  "description": "Fully local VOLP assignment tracker. Scrapes assignments directly from your browser session into local storage. No server required. Credentials encrypted with AES-256-GCM.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "webRequest",
+    "tabs",
+    "cookies"
+  ],
+  "host_permissions": [
+    "https://classroom.volp.in/*",
+    "https://learner.volp.in/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "VOLP Tracker",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://classroom.volp.in/*",
+        "https://learner.volp.in/*"
+      ],
+      "js": [
+        "crypto.js",
+        "storage.js",
+        "scraper.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
